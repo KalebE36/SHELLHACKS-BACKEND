@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/oauth2"
 
 	"net/http"
 )
@@ -28,7 +29,7 @@ func LoginHandler(auth *auth.Authenticator) gin.HandlerFunc {
 		session.Save()
 
 		// Redirect to Auth0 for login
-		authURL := auth.AuthCodeURL(state)
+		authURL := auth.AuthCodeURL(state, oauth2.AccessTypeOffline)
 		log.Printf("Redirecting to Auth0 with URL: %s", authURL)
 		ctx.Redirect(http.StatusTemporaryRedirect, authURL)
 	}
