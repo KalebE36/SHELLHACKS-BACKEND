@@ -57,7 +57,7 @@ func CallbackHandler(auth *auth.Authenticator) gin.HandlerFunc {
 		}
 
 		// Redirect to user profile page
-		ctx.Redirect(http.StatusTemporaryRedirect, "https://localhost:4321/index")
+		ctx.Redirect(http.StatusTemporaryRedirect, "http://localhost:4321/")
 	}
 }
 
