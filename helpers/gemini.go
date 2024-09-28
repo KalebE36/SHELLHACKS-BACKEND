@@ -5,16 +5,15 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"reflect"
 
 	"github.com/google/generative-ai-go/genai"
 	"google.golang.org/api/option"
 )
 
 // GenerateParagraphs generates a specified number of paragraphs using the Gemini API based on the input number
-func GenerateParagraphs(numParagraphs int) ([]string, error) {
+func GenerateParagraphs(numParagraphs int) ([]*genai.Candidate, error) {
 	ctx := context.Background()
-	client, err := genai.NewClient(ctx, option.WithAPIKey(os.Getenv("API_KEY")))
+	client, err := genai.NewClient(ctx, option.WithAPIKey(os.Getenv("GEMINI_API_KEY")))
 	if err != nil {
 		log.Fatal(err)
 		return nil, err
@@ -40,12 +39,5 @@ func GenerateParagraphs(numParagraphs int) ([]string, error) {
 		return nil, fmt.Errorf("error generating content: %v", err)
 	}
 
-	var paragraphs []string
-	for _, candidate := range resp.Candidates {
-		// Print the structure of candidate.Content to identify the correct field or method to use
-		fmt.Printf("Inspecting candidate.Content: %+v\n", reflect.TypeOf(candidate.Content))
-		fmt.Printf("Value of candidate.Content: %+v\n", candidate.Content)
-	}
-
-	return paragraphs, nil
+	return resp.Candidates, nil
 }
