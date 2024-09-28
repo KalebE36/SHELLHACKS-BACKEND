@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -141,11 +140,6 @@ func handleFirestoreUser(ctx *gin.Context, fsClient *firestore.Client, profile m
 		if !createNewFirestoreUser(ctx.Request.Context(), userDoc, profile) {
 			return false
 		}
-
-		// Handle creation of knowncards and unknowncards collections
-		if !handleCardCollections(ctx, userDoc) {
-			return false
-		}
 	} else {
 		log.Printf("User already exists in Firestore: %v", profile["email"])
 	}
@@ -183,45 +177,64 @@ func createNewFirestoreUser(ctx context.Context, userDoc *firestore.DocumentRef,
 	return true
 }
 
-// Handle knowncards, unknowncards, overflowcards collections
-func handleCardCollections(ctx *gin.Context, userDoc *firestore.DocumentRef) bool {
-	// Handle Known Cards
-	if !createCardDocument(ctx, userDoc.Collection("knowncards"), "exampleName", 42) {
+// HandleCardCollections handles adding a card to the appropriate collection
+func HandleCardCollections(ctx context.Context, userDoc *firestore.DocumentRef, cardType string, word string, number int) bool {
+	log.Printf("Handling card collections for %s...\n", cardType)
+
+	if !addCardToCollection(ctx, userDoc, cardType, word, number) {
+		log.Printf("Failed to add card to collection: %s\n", cardType)
 		return false
 	}
 
-	// Handle Unknown Cards
-	if !createCardDocument(ctx, userDoc.Collection("unknowncards"), "someName", 24) {
-		return false
-	}
-
-	// Handle Overflow Cards
-	if !createCardDocument(ctx, userDoc.Collection("overflowcards"), "someName", 24) {
-		return false
-	}
-
+	log.Printf("Successfully handled card collections for %s\n", cardType)
 	return true
 }
 
-// Create a card document in the specified collection
-func createCardDocument(ctx *gin.Context, collection *firestore.CollectionRef, name string, number int) bool {
-	// Generate a random document ID
+// TestHandleCardCollections handles adding a card to the appropriate collection for testing
+func TestHandleCardCollections(ctx context.Context, userDoc *firestore.DocumentRef, cardType string, word string, number int) bool {
+	return HandleCardCollections(nil, userDoc, cardType, word, number) // Use nil or pass context for testing
+}
+
+// Add a card to the appropriate collection when the user learns or encounters a card for the first time
+func addCardToCollection(ctx context.Context, userDoc *firestore.DocumentRef, collectionType string, word string, number int) bool {
+	// Get the correct collection reference
+	collection := userDoc.Collection("flashcards").Doc(collectionType).Collection(collectionType)
+
+	// If we're adding to unknowncards, check the size of the collection first
+	if collectionType == "unknowncards" {
+		// Get the documents in the unknowncards collection
+		docs, err := collection.Documents(ctx).GetAll()
+		if err != nil {
+			log.Printf("Failed to retrieve documents in %v collection: %v", collection.Path, err)
+			return false
+		}
+
+		// If the collection has more than 30 documents, move the new card to overflowcards
+		if len(docs) >= 30 {
+			log.Printf("unknowncards collection has reached the limit. Adding card to overflowcards.")
+			collectionType = "overflowcards" // Change the collection to overflowcards
+			collection = userDoc.Collection("flashcards").Doc(collectionType).Collection(collectionType)
+		}
+	}
+
+	// Generate a random document ID for the new card
 	newDocID, err := generateRandomID()
 	if err != nil {
 		log.Printf("Failed to generate random ID for document in %v collection: %v", collection.Path, err)
-		ctx.String(http.StatusInternalServerError, fmt.Sprintf("Failed to generate document ID in %v collection.", collection.Path))
 		return false
 	}
 
-	// Create the new card with a random ID
-	_, err = collection.Doc(newDocID).Set(ctx.Request.Context(), map[string]interface{}{
-		"name":      name,
+	log.Printf("Attempting to create document in %v collection...\n", collection.Path)
+
+	// Add the card with the generated ID
+	_, err = collection.Doc(newDocID).Set(ctx, map[string]interface{}{
+		"word":      word,
 		"number":    number,
 		"createdAt": firestore.ServerTimestamp,
 	})
+
 	if err != nil {
 		log.Printf("Failed to create document in %v collection: %v", collection.Path, err)
-		ctx.String(http.StatusInternalServerError, fmt.Sprintf("Failed to create document in %v collection.", collection.Path))
 		return false
 	}
 
