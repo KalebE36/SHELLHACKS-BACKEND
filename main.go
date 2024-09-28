@@ -1,6 +1,5 @@
 package main
 
-
 import (
 	"encoding/gob"
 	"log"
@@ -33,7 +32,6 @@ func main() {
 	router := routes.New(auth)
 
 	// Start the server
-	log.Print("Server starting on http://localhost:3000/")
 	if err := http.ListenAndServe("0.0.0.0:3000", router); err != nil {
 		log.Fatalf("Server error: %v", err)
 	}
