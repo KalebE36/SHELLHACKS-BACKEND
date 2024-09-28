@@ -35,7 +35,7 @@ func New(auth *auth.Authenticator) *gin.Engine {
 	router.GET("/callback", CallbackHandler(auth))
 	router.GET("/logout", LogoutHandler)
 	router.GET("/api/cards/ret-cards", cards.ReturnCardsHandler(auth))
-	router.GET("/generate-content", GenerateContentHandler)
+	router.GET("/generate-paragraphs", GenerateParagraphsHandler)
 
 	router.Run("0.0.0.0:3000")
 	return router
