@@ -13,21 +13,21 @@ import (
 // Handler for the login process.
 func LoginHandler(auth *auth.Authenticator) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		state, err := helpers.GenerateState()
-
-		if err != nil {
-			ctx.String(http.StatusInternalServerError, err.Error())
-			return
-		}
-		// Store the state in the session
 		session := sessions.Default(ctx)
-		session.Set("state", state)
-		if err := session.Save(); err != nil {
-			ctx.String(http.StatusInternalServerError, err.Error())
+
+		// Generate a state value to prevent CSRF attacks
+		state, err := helpers.GenerateState()
+		if err != nil {
+			ctx.String(http.StatusInternalServerError, "Failed to generate state")
 			return
 		}
 
-		// Redirect to the Auth0 login page
-		ctx.Redirect(http.StatusTemporaryRedirect, auth.AuthCodeURL(state))
+		// Save state to session
+		session.Set("state", state)
+		session.Save()
+
+		// Redirect to Auth0 for login
+		authURL := auth.AuthCodeURL(state)
+		ctx.Redirect(http.StatusTemporaryRedirect, authURL)
 	}
 }
