@@ -1,6 +1,5 @@
 package main
 
-
 import (
 	"encoding/gob"
 	"log"
