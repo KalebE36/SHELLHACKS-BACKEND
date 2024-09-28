@@ -50,13 +50,9 @@ func CallbackHandler() gin.HandlerFunc {
 
 		// Extract user information from the token
 		uid := token.UID
-		email := token.Claims["email"].(string)
-		picture := token.Claims["picture"].(string)
 
 		// Save user info in the session
 		session.Set("user_id", uid)
-		session.Set("email", email)
-		session.Set("picture", picture)
 		if err := session.Save(); err != nil {
 			log.Printf("Failed to save session: %v", err)
 			ctx.String(http.StatusInternalServerError, "Failed to save session")
@@ -78,10 +74,7 @@ func CallbackHandler() gin.HandlerFunc {
 		if err != nil && !doc.Exists() {
 			// User does not exist, create a new user
 			user := models.User{
-				ID:       uid,
-				Email:    email,
-				Picture:  picture,
-				Username: token.Claims["name"].(string), // Safely extract the username
+				ID: uid,
 			}
 
 			// Add the user to Firestore
@@ -91,9 +84,9 @@ func CallbackHandler() gin.HandlerFunc {
 				ctx.String(http.StatusInternalServerError, "Failed to add user to Firestore")
 				return
 			}
-			log.Printf("User added to Firestore: %v", user.Email)
+			log.Printf("User added to Firestore: %v", uid)
 		} else {
-			log.Printf("User already exists in Firestore: %v", email)
+			log.Printf("User already exists in Firestore: %v", uid)
 		}
 
 		// Redirect to the frontend page (replace with your frontend URL)
