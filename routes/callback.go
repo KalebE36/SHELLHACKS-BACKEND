@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"SHELLHACKS-BACKEND/auth"
 	"SHELLHACKS-BACKEND/database"
@@ -57,7 +58,7 @@ func CallbackHandler(auth *auth.Authenticator) gin.HandlerFunc {
 		}
 
 		// Redirect to user profile page
-		
+
 		ctx.Redirect(http.StatusTemporaryRedirect, "http://localhost:4321/")
 	}
 }
@@ -111,6 +112,17 @@ func verifyIDTokenAndExtractProfile(ctx *gin.Context, auth *auth.Authenticator, 
 func saveSession(ctx *gin.Context, session sessions.Session, profile map[string]interface{}, token *oauth2.Token) bool {
 	session.Set("access_token", token.AccessToken)
 	session.Set("profile", profile)
+
+	http.SetCookie(ctx.Writer, &http.Cookie{
+		Name:     "access_token",
+		Value:    token.AccessToken,
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		Secure:   false,
+		Expires:  time.Now().Add(24 * time.Hour),
+	})
+
 	if err := session.Save(); err != nil {
 		log.Printf("Failed to save session: %v", err)
 		ctx.String(http.StatusInternalServerError, "Failed to save session.")
