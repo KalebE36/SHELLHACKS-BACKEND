@@ -3,6 +3,7 @@ package routes
 import (
 	"SHELLHACKS-BACKEND/auth"
 	"SHELLHACKS-BACKEND/helpers"
+	"log"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -28,6 +29,7 @@ func LoginHandler(auth *auth.Authenticator) gin.HandlerFunc {
 
 		// Redirect to Auth0 for login
 		authURL := auth.AuthCodeURL(state)
+		log.Printf("Redirecting to Auth0 with URL: %s", authURL)
 		ctx.Redirect(http.StatusTemporaryRedirect, authURL)
 	}
 }

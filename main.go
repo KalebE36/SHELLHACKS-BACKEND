@@ -4,6 +4,7 @@ import (
 	"encoding/gob"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/joho/godotenv"
 
@@ -20,6 +21,8 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatalf("Failed to load env vars: %v", err)
 	}
+
+	log.Println("Loaded callback URL:", os.Getenv("AUTH0_CALLBACK_URL"))
 
 	// Initialize the Authenticator
 	auth, err := auth.New()
