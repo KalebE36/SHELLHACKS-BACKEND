@@ -183,7 +183,7 @@ func createNewFirestoreUser(ctx context.Context, userDoc *firestore.DocumentRef,
 	return true
 }
 
-// Handle knowncards and unknowncards collections
+// Handle knowncards, unknowncards, overflowcards collections
 func handleCardCollections(ctx *gin.Context, userDoc *firestore.DocumentRef) bool {
 	// Handle Known Cards
 	if !createCardDocument(ctx, userDoc.Collection("knowncards"), "exampleName", 42) {
@@ -195,7 +195,8 @@ func handleCardCollections(ctx *gin.Context, userDoc *firestore.DocumentRef) boo
 		return false
 	}
 
-	if !createCardDocument(ctx, userDoc.Collection("test"), "someName", 24) {
+	// Handle Overflow Cards
+	if !createCardDocument(ctx, userDoc.Collection("overflowcards"), "someName", 24) {
 		return false
 	}
 
