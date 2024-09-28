@@ -45,6 +45,11 @@ func CallbackHandler(auth *auth.Authenticator) gin.HandlerFunc {
 			return
 		}
 
+		ctx.JSON(http.StatusOK, gin.H{
+			"access_token": token.AccessToken,
+			"profile":      profile,
+		})
+
 		// Initialize Firestore client
 		fsClient, err := initializeFirestoreClient(ctx)
 		if err != nil {
