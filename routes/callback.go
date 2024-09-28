@@ -2,6 +2,8 @@ package routes
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"net/http"
@@ -57,7 +59,6 @@ func CallbackHandler(auth *auth.Authenticator) gin.HandlerFunc {
 		}
 
 		// Redirect to user profile page
-		
 		ctx.Redirect(http.StatusTemporaryRedirect, "http://localhost:4321/")
 	}
 }
@@ -137,7 +138,7 @@ func handleFirestoreUser(ctx *gin.Context, fsClient *firestore.Client, profile m
 	doc, err := userDoc.Get(ctx.Request.Context())
 	if err != nil && !doc.Exists() {
 		// User does not exist, create a new user
-		if !createNewFirestoreUser(ctx, userDoc, profile) {
+		if !createNewFirestoreUser(ctx.Request.Context(), userDoc, profile) {
 			return false
 		}
 
@@ -156,7 +157,6 @@ func createNewFirestoreUser(ctx context.Context, userDoc *firestore.DocumentRef,
 	// Safely extract profile data
 	email, ok := profile["email"].(string)
 	if !ok || email == "" {
-		// Handle case where email is missing or not a string
 		log.Println("Email not found in profile")
 		return false
 	}
@@ -185,13 +185,17 @@ func createNewFirestoreUser(ctx context.Context, userDoc *firestore.DocumentRef,
 
 // Handle knowncards and unknowncards collections
 func handleCardCollections(ctx *gin.Context, userDoc *firestore.DocumentRef) bool {
-	// Known Cards
+	// Handle Known Cards
 	if !createCardDocument(ctx, userDoc.Collection("knowncards"), "exampleName", 42) {
 		return false
 	}
 
-	// Unknown Cards
+	// Handle Unknown Cards
 	if !createCardDocument(ctx, userDoc.Collection("unknowncards"), "someName", 24) {
+		return false
+	}
+
+	if !createCardDocument(ctx, userDoc.Collection("test"), "someName", 24) {
 		return false
 	}
 
@@ -200,18 +204,19 @@ func handleCardCollections(ctx *gin.Context, userDoc *firestore.DocumentRef) boo
 
 // Create a card document in the specified collection
 func createCardDocument(ctx *gin.Context, collection *firestore.CollectionRef, name string, number int) bool {
-	// Count the number of documents and create a new document with the next ID
-	docs, err := collection.Documents(ctx.Request.Context()).GetAll()
+	// Generate a random document ID
+	newDocID, err := generateRandomID()
 	if err != nil {
-		log.Printf("Failed to retrieve documents in %v collection: %v", collection.Path, err)
-		ctx.String(http.StatusInternalServerError, fmt.Sprintf("Failed to retrieve documents in %v collection.", collection.Path))
+		log.Printf("Failed to generate random ID for document in %v collection: %v", collection.Path, err)
+		ctx.String(http.StatusInternalServerError, fmt.Sprintf("Failed to generate document ID in %v collection.", collection.Path))
 		return false
 	}
 
-	newDocID := fmt.Sprintf("card%d", len(docs)+1)
+	// Create the new card with a random ID
 	_, err = collection.Doc(newDocID).Set(ctx.Request.Context(), map[string]interface{}{
-		"name":   name,
-		"number": number,
+		"name":      name,
+		"number":    number,
+		"createdAt": firestore.ServerTimestamp,
 	})
 	if err != nil {
 		log.Printf("Failed to create document in %v collection: %v", collection.Path, err)
@@ -221,4 +226,14 @@ func createCardDocument(ctx *gin.Context, collection *firestore.CollectionRef, n
 
 	log.Printf("Document %s created in %v collection", newDocID, collection.Path)
 	return true
+}
+
+// Generate a random document ID
+func generateRandomID() (string, error) {
+	// Create a random 16-byte ID and encode it as a hex string
+	bytes := make([]byte, 16)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
 }

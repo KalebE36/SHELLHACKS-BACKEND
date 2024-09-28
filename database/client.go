@@ -12,11 +12,11 @@ import (
 // InitializeFirestore initializes the Firestore client
 func InitializeFirestore() (*firestore.Client, error) {
 	// Set the path to your Firebase service account key
-	opt := option.WithCredentialsFile("database/shellhacks-go-firebase-adminsdk-kud5n-4be4c82471.json")
+	opt := option.WithCredentialsFile("firestore/shellhacks-f1d7c-firebase-adminsdk-f9j4e-4d541506af.json")
 
 	// Initialize the Firebase App
 	config := &firebase.Config{
-		ProjectID: "shellhacks-go", // Replace with your Firebase project ID
+		ProjectID: "shellhacks-f1d7c", // Replace with your Firebase project ID
 	}
 
 	// Initialize Firebase App with explicit project ID
