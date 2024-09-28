@@ -2,34 +2,69 @@ package database
 
 import (
 	"context"
-	"fmt"
+	"errors"
+	"log"
 
-	"cloud.google.com/go/firestore"   // Firestore client package
-	firebase "firebase.google.com/go" // Firebase Admin SDK package
-	"google.golang.org/api/option"    // For providing service account key
+	"cloud.google.com/go/firestore"
+	firebase "firebase.google.com/go"
+	"firebase.google.com/go/auth"
+	"google.golang.org/api/option"
 )
 
-// InitializeFirestore initializes the Firestore client
-func InitializeFirestore() (*firestore.Client, error) {
-	// Set the path to your Firebase service account key
-	opt := option.WithCredentialsFile("database/shellhacks-go-firebase-adminsdk-kud5n-4be4c82471.json")
+// Global variable to hold the Firebase app instance
+var firebaseApp *firebase.App
+var errFirebaseNotInitialized = errors.New("firebase not initialized")
 
-	// Initialize the Firebase App
-	config := &firebase.Config{
-		ProjectID: "shellhacks-go", // Replace with your Firebase project ID
+// InitializeFirebase initializes the Firebase app with service account credentials.
+func InitializeFirebase() error {
+	ctx := context.Background()
+
+	// Path to your service account key JSON file
+	sa := option.WithCredentialsFile("database/shellhacks-go-firebase-adminsdk-kud5n-4be4c82471.json")
+
+	// Initialize the Firebase app
+	var err error
+	firebaseApp, err = firebase.NewApp(ctx, nil, sa)
+	if err != nil {
+		log.Printf("Failed to initialize Firebase app: %v", err)
+		return err
 	}
 
-	// Initialize Firebase App with explicit project ID
-	app, err := firebase.NewApp(context.Background(), config, opt)
-	if err != nil {
-		return nil, fmt.Errorf("error initializing app: %v", err)
+	log.Println("Firebase app initialized successfully")
+	return nil
+}
+
+// InitializeFirestoreClient initializes and returns the Firestore client.
+func InitializeFirestoreClient(ctx context.Context) (*firestore.Client, error) {
+	// Ensure Firebase is initialized
+	if firebaseApp == nil {
+		return nil, errFirebaseNotInitialized
 	}
 
 	// Initialize Firestore client
-	client, err := app.Firestore(context.Background())
+	projectID := "your-project-id" // Replace with your actual Firebase project ID
+	client, err := firestore.NewClient(ctx, projectID)
 	if err != nil {
-		return nil, fmt.Errorf("error initializing Firestore client: %v", err)
+		log.Printf("Failed to initialize Firestore client: %v", err)
+		return nil, err
 	}
 
 	return client, nil
+}
+
+// GetAuthClient initializes and returns the Firebase Auth client.
+func GetAuthClient(ctx context.Context) (*auth.Client, error) {
+	// Ensure Firebase is initialized
+	if firebaseApp == nil {
+		return nil, errFirebaseNotInitialized
+	}
+
+	// Initialize Firebase Auth client
+	authClient, err := firebaseApp.Auth(ctx)
+	if err != nil {
+		log.Printf("Failed to initialize Firebase Auth client: %v", err)
+		return nil, err
+	}
+
+	return authClient, nil
 }

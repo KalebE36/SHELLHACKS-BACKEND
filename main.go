@@ -4,12 +4,11 @@ import (
 	"encoding/gob"
 	"log"
 	"net/http"
-	"os"
 
-	"github.com/joho/godotenv"
-
-	"SHELLHACKS-BACKEND/auth"
 	"SHELLHACKS-BACKEND/routes"
+
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func init() {
@@ -18,23 +17,22 @@ func init() {
 }
 
 func main() {
+	// Load environment variables from .env file
 	if err := godotenv.Load(); err != nil {
 		log.Fatalf("Failed to load env vars: %v", err)
 	}
 
-	log.Println("Loaded callback URL:", os.Getenv("AUTH0_CALLBACK_URL"))
+	// Log the loaded callback URL for debugging purposes
 
 	// Initialize the Authenticator
-	auth, err := auth.New()
-	if err != nil {
-		log.Fatalf("Failed to initialize the authenticator: %v", err)
-	}
 
-	gob.Register(map[string]interface{}{})
-	// Create the Gin router
-	router := routes.New(auth)
+	// Create a Gin router
+	router := gin.Default()
 
-	// Start the server
+	// Define routes using your existing routes package
+	router.GET("/callback", routes.CallbackHandler())
+
+	// Start the server on port 3000
 	if err := http.ListenAndServe("0.0.0.0:3000", router); err != nil {
 		log.Fatalf("Server error: %v", err)
 	}
