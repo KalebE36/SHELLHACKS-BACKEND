@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/gob"
 	"log"
 	"net/http"
 
@@ -9,6 +10,11 @@ import (
 	"SHELLHACKS-BACKEND/auth"
 	"SHELLHACKS-BACKEND/routes"
 )
+
+func init() {
+	// Register map[string]interface{} type with gob
+	gob.Register(map[string]interface{}{})
+}
 
 func main() {
 	if err := godotenv.Load(); err != nil {
@@ -21,6 +27,7 @@ func main() {
 		log.Fatalf("Failed to initialize the authenticator: %v", err)
 	}
 
+	gob.Register(map[string]interface{}{})
 	// Create the Gin router
 	router := routes.New(auth)
 
