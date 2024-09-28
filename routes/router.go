@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"SHELLHACKS-BACKEND/auth"
+	"SHELLHACKS-BACKEND/routes/api/cards"
 )
 
 func New(auth *auth.Authenticator) *gin.Engine {
@@ -14,7 +15,7 @@ func New(auth *auth.Authenticator) *gin.Engine {
 
 	// CORS configuration with credentials allowed
 	corsConfig := cors.Config{
-		AllowOrigins:     []string{"http://localhost:4321"}, // Allow frontend origin
+		AllowOrigins:     []string{"http://localhost:4321", "http://3.147.36.237"}, // Allow frontend origin
 		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Authorization", "Content-Type"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -30,10 +31,10 @@ func New(auth *auth.Authenticator) *gin.Engine {
 	store := cookie.NewStore([]byte("secret"))
 	router.Use(sessions.Sessions("auth-session", store))
 
-	// Define routes that use session middleware
 	router.GET("/login", LoginHandler(auth))
 	router.GET("/callback", CallbackHandler(auth))
 	router.GET("/logout", LogoutHandler)
+	router.GET("/api/cards/ret-cards", cards.ReturnCardsHandler(auth))
 
 	return router
 }
