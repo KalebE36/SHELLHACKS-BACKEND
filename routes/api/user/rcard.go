@@ -2,15 +2,18 @@ package user
 
 import (
 	"SHELLHACKS-BACKEND/firebase"
+	"SHELLHACKS-BACKEND/helpers"
 	"SHELLHACKS-BACKEND/models"
 	"context"
 	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/generative-ai-go/genai"
 )
 
 func RetCardHandler(ctx *gin.Context) {
+	var translations []genai.Part
 	var requestBody struct {
 		UserId string `json:"user_id"`
 	}
@@ -52,9 +55,28 @@ func RetCardHandler(ctx *gin.Context) {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode card data"})
 			return
 		}
+
+		translationCandidates, err := helpers.TranslateCard(&card, "Spanish")
+		if err != nil {
+			log.Printf("Failed to translate card %s: %v", card.Word, err)
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to translate card"})
+			return
+		}
+
+		for _, candidate := range translationCandidates {
+			if candidate.Content != nil && len(candidate.Content.Parts) > 0 {
+				// Extract the first part of the content
+				parts := candidate.Content.Parts[0]
+				translations = append(translations, parts)
+				break // Only take the first valid translation
+			}
+		}
 		cards = append(cards, card)
 	}
 
 	// Return the array of cards as a JSON response
-	ctx.JSON(http.StatusOK, gin.H{"cards": cards})
+	ctx.JSON(http.StatusOK, gin.H{
+		"cards":        cards,
+		"translations": translations,
+	})
 }
