@@ -3,6 +3,7 @@ package routes
 import (
 	"SHELLHACKS-BACKEND/helpers"
 	"SHELLHACKS-BACKEND/routes/api"
+	"SHELLHACKS-BACKEND/routes/api/story"
 	"log"
 	"net/http"
 
@@ -17,6 +18,8 @@ func InitializeRouter() *mux.Router {
 
 	// Define the routes and map them to handler functions
 	router.HandleFunc("/api/onboard-gen", helpers.ConvertGinToMux(api.GenerateParagraphsHandler)).Methods("POST")
+	router.HandleFunc("/api/story/story-start", helpers.ConvertGinToMux(story.StartStoryHandler)).Methods("GET")
+	router.HandleFunc("/api/story/story-answer", helpers.ConvertGinToMux(story.HandleStoryResponse)).Methods("POST")
 
 	allowedOrigins := handlers.AllowedOrigins([]string{"http://localhost:4321"})
 	allowedMethods := handlers.AllowedMethods([]string{"GET", "POST"})
