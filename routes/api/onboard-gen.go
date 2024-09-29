@@ -23,15 +23,13 @@ func GenerateParagraphsHandler(ctx *gin.Context) {
 	}
 
 	// Call the GenerateParagraphs function to get the paragraphs
-	paragraphs, err := helpers.GenerateParagraphs(requestBody.Number)
+	paragraphs, err := helpers.Onboarding(requestBody.Number)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to generate paragraphs",
 		})
 		return
 	}
-
-	
 
 	// Return the paragraphs as a JSON response
 	ctx.JSON(http.StatusOK, gin.H{
