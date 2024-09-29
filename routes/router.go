@@ -3,7 +3,10 @@ package routes
 import (
 	"SHELLHACKS-BACKEND/helpers"
 	"SHELLHACKS-BACKEND/routes/api"
+	"log"
+	"net/http"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -13,10 +16,14 @@ func InitializeRouter() *mux.Router {
 	router := mux.NewRouter()
 
 	// Define the routes and map them to handler functions
-	router.HandleFunc("/api/generate-content", helpers.ConvertGinToMux(api.GenerateParagraphsHandler)).Methods("POST")
+	router.HandleFunc("/api/onboard-gen", helpers.ConvertGinToMux(api.GenerateParagraphsHandler)).Methods("POST")
+
+	allowedOrigins := handlers.AllowedOrigins([]string{"http://localhost:4321"})
+	allowedMethods := handlers.AllowedMethods([]string{"GET", "POST"})
+	allowedHeaders := handlers.AllowedHeaders([]string{"Content-Type", "Authorization"})
 
 	// Add more routes as needed
 	// router.HandleFunc("/other", OtherHandler).Methods("GET")
-
+	log.Fatal(http.ListenAndServe(":3000", handlers.CORS(allowedOrigins, allowedMethods, allowedHeaders)(router)))
 	return router
 }
