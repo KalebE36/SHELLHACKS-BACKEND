@@ -4,6 +4,7 @@ import (
 	"SHELLHACKS-BACKEND/helpers"
 	"SHELLHACKS-BACKEND/routes/api"
 	"SHELLHACKS-BACKEND/routes/api/story"
+	"SHELLHACKS-BACKEND/routes/api/chat"
 	"SHELLHACKS-BACKEND/routes/api/user"
 	"log"
 	"net/http"
@@ -20,7 +21,8 @@ func InitializeRouter() *mux.Router {
 	// Define the routes and map them to handler functions
 	router.HandleFunc("/api/onboard-gen", helpers.ConvertGinToMux(api.GenerateParagraphsHandler)).Methods("POST")
 	router.HandleFunc("/api/story/story-start", helpers.ConvertGinToMux(story.StartStoryHandler)).Methods("GET")
-	router.HandleFunc("/api/story/chat-start", helpers.ConvertGinToMux(story.StartChatHandler)).Methods("GET")
+	router.HandleFunc("/api/chat/chat-start", helpers.ConvertGinToMux(chat.StartChatHandler)).Methods("GET")
+	router.HandleFunc("/api/chat/chat-answer", helpers.ConvertGinToMux(chat.HandleChatResponse)).Methods("POST")
 	router.HandleFunc("/api/story/story-answer", helpers.ConvertGinToMux(story.HandleStoryResponse)).Methods("POST")
 	router.HandleFunc("/api/user/pcard", helpers.ConvertGinToMux(user.MakeCardHandler)).Methods("POST")
 	router.HandleFunc("/api/user/rcard", helpers.ConvertGinToMux(user.RetCardHandler)).Methods("POST")
