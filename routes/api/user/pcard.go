@@ -17,15 +17,12 @@ func SpacedRepetition(card *models.Flashcard) {
 	*card.Proficiency = *card.Proficiency * 2 // Double the interval if the answer was correct
 }
 
-func checkIfCardExists(client *firestore.Client, userID string, cardWord string) (bool, error) {
-	// Get reference to the user's flashcards collection
-	cardsRef := client.Collection("users").Doc(userID).Collection("Spanish")
-
-	// Reference the document by cardWord (document ID)
-	cardDoc := cardsRef.Doc(cardWord)
+func checkIfUserExists(client *firestore.Client, userID string) (bool, error) {
+	// Get reference to the user's document
+	userDoc := client.Collection("users").Doc(userID)
 
 	// Attempt to get the document snapshot
-	docSnap, err := cardDoc.Get(context.Background())
+	docSnap, err := userDoc.Get(context.Background())
 	if err != nil {
 		// Return the error if something goes wrong other than document not found
 		return false, err
@@ -33,11 +30,9 @@ func checkIfCardExists(client *firestore.Client, userID string, cardWord string)
 
 	// Check if the document exists
 	return docSnap.Exists(), nil
-
 }
 
 func MakeCardHandler(ctx *gin.Context) {
-
 	var requestBody struct {
 		UserId    string             `json:"user_id"`
 		CardArray []models.Flashcard `json:"card_array"`
@@ -58,11 +53,24 @@ func MakeCardHandler(ctx *gin.Context) {
 	}
 
 	fsClient, err := fbClient.Firestore(context.Background())
-
 	if err != nil {
 		log.Fatalf("Failed to create Firestore client: %v", err)
 	}
 	defer fsClient.Close()
+
+	// Check if the user exists in Firestore
+	userExists, err := checkIfUserExists(fsClient, requestBody.UserId)
+	if err != nil {
+		log.Printf("Failed to check if user exists: %v", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check user existence"})
+		return
+	}
+
+	// If user doesn't exist, return a 404 response
+	if !userExists {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
 
 	userFlashcards := fsClient.Collection("users").Doc(requestBody.UserId).Collection("Spanish")
 

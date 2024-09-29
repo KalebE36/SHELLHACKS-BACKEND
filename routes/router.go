@@ -22,6 +22,7 @@ func InitializeRouter() *mux.Router {
 	router.HandleFunc("/api/story/story-start", helpers.ConvertGinToMux(story.StartStoryHandler)).Methods("GET")
 	router.HandleFunc("/api/story/story-answer", helpers.ConvertGinToMux(story.HandleStoryResponse)).Methods("POST")
 	router.HandleFunc("/api/user/pcard", helpers.ConvertGinToMux(user.MakeCardHandler)).Methods("POST")
+	router.HandleFunc("/api/user/rcard", helpers.ConvertGinToMux(user.RetCardHandler)).Methods("POST")
 	router.HandleFunc("/api/user/see-user", helpers.ConvertGinToMux(user.CreateUserHandler)).Methods("POST")
 
 	allowedOrigins := handlers.AllowedOrigins([]string{"http://localhost:4321"})
