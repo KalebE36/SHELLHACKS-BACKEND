@@ -31,6 +31,8 @@ func GenerateParagraphsHandler(ctx *gin.Context) {
 		return
 	}
 
+	
+
 	// Return the paragraphs as a JSON response
 	ctx.JSON(http.StatusOK, gin.H{
 		"paragraphs": paragraphs,

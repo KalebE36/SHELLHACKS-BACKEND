@@ -17,6 +17,7 @@ func main() {
 	}
 
 	router := routes.InitializeRouter()
+	
 
 	// Start the server on port 3000
 	if err := http.ListenAndServe("0.0.0.0:3000", router); err != nil {
