@@ -37,5 +37,10 @@ func CreateUserHandler(ctx *gin.Context) {
 	fmt.Println("PhotoURL:", incomingData.PhotoURL)
 
 	photo_url := &incomingData.PhotoURL
-	firebase.CreateUser(firebaseApp, incomingData.UID, incomingData.Email, photo_url)
+	err = firebase.CreateUser(firebaseApp, incomingData.UID, incomingData.Email, photo_url)
+	if err != nil {
+		log.Printf("Failed to create user: %v", err)
+		// Handle the error appropriately, possibly return it or exit
+		return
+	}
 }

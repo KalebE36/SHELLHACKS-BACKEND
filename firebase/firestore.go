@@ -174,3 +174,14 @@ func UpdateLanguageField(app *firebase.App, userID string, language string, fiel
 	fmt.Printf("Field %s in language %s updated successfully! New value: %d\n", field, language, newValue)
 	return nil
 }
+
+func createFirestore() *firestore.Client {
+	projectID := "shellhacks-f1d7c"
+	client, err := firestore.NewClient(context.Background(), projectID)
+
+	if err != nil {
+		log.Fatalf("Failed to create client: %v", err)
+	}
+
+	return client
+}
