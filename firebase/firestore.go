@@ -53,7 +53,8 @@ func CreateUser(app *firebase.App, userID string, email string, photoURL *string
 	return nil
 }
 
-// AddSubCollectionToLanguage adds a sub-collection to a specific language document (e.g., "spanish") inside the "language" collection.
+// AddSubCollectionToLanguage checks if the "unknown_cards" sub-collection exists and has over 30 items,
+// then switches to "overflow_cards" if needed.
 func AddSubCollectionToLanguage(app *firebase.App, userID string, language string, subCollectionName string, data map[string]interface{}) error {
 	// Initialize Firestore client
 	ctx := context.Background()
@@ -67,6 +68,22 @@ func AddSubCollectionToLanguage(app *firebase.App, userID string, language strin
 	// Reference to the specific language document under the "language" collection
 	languageDocRef := client.Collection("users").Doc(userID).Collection("language").Doc(language)
 
+	// Use a query to count the number of documents in the "unknown_cards" sub-collection
+	unknownCardsCollectionRef := languageDocRef.Collection("unknown_cards")
+	docsCount, err := unknownCardsCollectionRef.Limit(31).Documents(ctx).GetAll() // Fetch a maximum of 31 documents to check if the limit is exceeded
+	if err != nil {
+		log.Fatalf("Failed to retrieve unknown_cards sub-collection: %v", err)
+		return err
+	}
+
+	fmt.Printf("Found %d documents in 'unknown_cards'\n", len(docsCount)) // Debug print to show the document count
+
+	// If there are more than or equal to 30 documents in "unknown_cards", switch to "overflow_cards"
+	if len(docsCount) >= 30 {
+		subCollectionName = "overflow_cards"
+		fmt.Println("Switching to overflow_cards as unknown_cards has reached the limit of 30 items")
+	}
+
 	// Reference to the sub-collection within the language document
 	subCollectionRef := languageDocRef.Collection(subCollectionName)
 
@@ -77,7 +94,7 @@ func AddSubCollectionToLanguage(app *firebase.App, userID string, language strin
 		return err
 	}
 
-	fmt.Printf("Sub-collection %s added to language %s with provided data!\n", subCollectionName, language)
+	fmt.Printf("Data added to sub-collection %s in language %s with provided data!\n", subCollectionName, language)
 	return nil
 }
 
@@ -104,6 +121,7 @@ func AddLanguage(app *firebase.App, userID string, language string) error {
 		"learned_cards":   0,
 		"paragraphs_read": 0,
 		"streak":          0,
+		"expertise":       0,
 	}, firestore.MergeAll) // MergeAll ensures that only the "integer" field is added or updated
 	if err != nil {
 		log.Fatalf("Failed to add integer field to spanish document: %v", err)
@@ -111,5 +129,48 @@ func AddLanguage(app *firebase.App, userID string, language string) error {
 	}
 
 	fmt.Println("Language and spanish document created successfully with integer field set to 0!")
+	return nil
+}
+
+// UpdateLanguageField adds the passed value to the current field value in the language document.
+func UpdateLanguageField(app *firebase.App, userID string, language string, field string, incrementValue int) error {
+	// Initialize Firestore client
+	ctx := context.Background()
+	client, err := app.Firestore(ctx)
+	if err != nil {
+		log.Fatalf("error getting Firestore client: %v\n", err)
+		return err
+	}
+	defer client.Close()
+
+	// Reference to the specific language document under the "language" collection
+	languageDocRef := client.Collection("users").Doc(userID).Collection("language").Doc(language)
+
+	// Retrieve the current value of the specified field
+	docSnapshot, err := languageDocRef.Get(ctx)
+	if err != nil {
+		log.Fatalf("Failed to retrieve language document: %v", err)
+		return err
+	}
+
+	// Get the current value of the field, assuming the field is of type int
+	currentValue, ok := docSnapshot.Data()[field].(int64) // Firestore stores integers as int64
+	if !ok {
+		return fmt.Errorf("field %s is not of type int", field)
+	}
+
+	// Add the passed value to the current value
+	newValue := currentValue + int64(incrementValue)
+
+	// Update the field with the new value
+	_, err = languageDocRef.Update(ctx, []firestore.Update{
+		{Path: field, Value: newValue},
+	})
+	if err != nil {
+		log.Fatalf("Failed to update field in language document: %v", err)
+		return err
+	}
+
+	fmt.Printf("Field %s in language %s updated successfully! New value: %d\n", field, language, newValue)
 	return nil
 }

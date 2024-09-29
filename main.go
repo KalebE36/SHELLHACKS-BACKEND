@@ -4,6 +4,7 @@ import (
 	"SHELLHACKS-BACKEND/firebase" // Import your custom firebase package
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/joho/godotenv"
 )
@@ -44,9 +45,32 @@ func main() {
 		"int":  120,
 	}
 
+	for i := 1; i <= 30; i++ {
+		data = map[string]interface{}{
+			"word": "quack" + strconv.Itoa(i-1),
+			"int":  120,
+		}
+		err = firebase.AddSubCollectionToLanguage(firebaseApp, "e797c4c4-2976-4248-8938-a14a656c6e70", "spanish", "unknown_card", data)
+	}
+
+	data = map[string]interface{}{
+		"word": "moo",
+		"int":  120,
+	}
+
+	err = firebase.AddSubCollectionToLanguage(firebaseApp, "e797c4c4-2976-4248-8938-a14a656c6e70", "spanish", "unknown_card", data)
+
+	data = map[string]interface{}{
+		"word": "moo2",
+		"int":  120,
+	}
+
+	err = firebase.AddSubCollectionToLanguage(firebaseApp, "e797c4c4-2976-4248-8938-a14a656c6e70", "spanish", "unknown_card", data)
+
 	err = firebase.AddSubCollectionToLanguage(firebaseApp, "e797c4c4-2976-4248-8938-a14a656c6e70", "spanish", "known_card", data)
 
 	err = firebase.AddLanguage(firebaseApp, "e797c4c4-2976-4248-8938-a14a656c6e70", "spanish")
+	err = firebase.UpdateLanguageField(firebaseApp, "e797c4c4-2976-4248-8938-a14a656c6e70", "spanish", "learned_cards", 1)
 
 	// Initialize the router from routes.go (as before)
 	router := http.NewServeMux()
