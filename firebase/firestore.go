@@ -6,6 +6,7 @@ import (
 	"log"
 	"strings"
 
+	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
 )
 
@@ -52,9 +53,9 @@ func CreateUser(app *firebase.App, userID string, email string, photoURL *string
 	return nil
 }
 
-// AddSubCollection adds a document to a sub-collection within a user document.
-func AddSubCollection(app *firebase.App, userID, collectionName string, data map[string]interface{}) error {
-	// Initialize Firestore client.
+// AddSubCollectionToLanguage adds a sub-collection to a specific language document (e.g., "spanish") inside the "language" collection.
+func AddSubCollectionToLanguage(app *firebase.App, userID string, language string, subCollectionName string, data map[string]interface{}) error {
+	// Initialize Firestore client
 	ctx := context.Background()
 	client, err := app.Firestore(ctx)
 	if err != nil {
@@ -63,16 +64,52 @@ func AddSubCollection(app *firebase.App, userID, collectionName string, data map
 	}
 	defer client.Close()
 
-	// Add a document to a sub-collection under the user document
-	subCollectionRef := client.Collection("users").Doc(userID).Collection(collectionName)
+	// Reference to the specific language document under the "language" collection
+	languageDocRef := client.Collection("users").Doc(userID).Collection("language").Doc(language)
 
-	// Add the data to the sub-collection
+	// Reference to the sub-collection within the language document
+	subCollectionRef := languageDocRef.Collection(subCollectionName)
+
+	// Add a document to the sub-collection with the provided data
 	_, _, err = subCollectionRef.Add(ctx, data)
 	if err != nil {
-		log.Fatalf("Failed adding to sub-collection: %v", err)
+		log.Fatalf("Failed to add data to sub-collection: %v", err)
 		return err
 	}
 
-	fmt.Println("Data added to sub-collection successfully!")
+	fmt.Printf("Sub-collection %s added to language %s with provided data!\n", subCollectionName, language)
+	return nil
+}
+
+// AddLanguage creates a "language" collection under a user and a "spanish" document with a direct "integer" field.
+func AddLanguage(app *firebase.App, userID string, language string) error {
+	// Initialize Firestore client
+	ctx := context.Background()
+	client, err := app.Firestore(ctx)
+	if err != nil {
+		log.Fatalf("error getting Firestore client: %v\n", err)
+		return err
+	}
+	defer client.Close()
+
+	// Reference to the "language" collection under the user document
+	languageCollectionRef := client.Collection("users").Doc(userID).Collection("language")
+
+	// Reference to the "spanish" document under the "language" collection
+	spanishDocRef := languageCollectionRef.Doc(language)
+
+	// Add the "integer" field directly to the "spanish" document
+	_, err = spanishDocRef.Set(ctx, map[string]interface{}{
+		"total_cards":     0,
+		"learned_cards":   0,
+		"paragraphs_read": 0,
+		"streak":          0,
+	}, firestore.MergeAll) // MergeAll ensures that only the "integer" field is added or updated
+	if err != nil {
+		log.Fatalf("Failed to add integer field to spanish document: %v", err)
+		return err
+	}
+
+	fmt.Println("Language and spanish document created successfully with integer field set to 0!")
 	return nil
 }

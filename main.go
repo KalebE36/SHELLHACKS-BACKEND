@@ -34,7 +34,7 @@ func main() {
 		"word": "Laptop",
 		"int":  1200,
 	}
-	err = firebase.AddSubCollection(firebaseApp, "e797c4c4-2976-4248-8938-a14a656c6e70", "known_card", data)
+	err = firebase.AddSubCollectionToLanguage(firebaseApp, "e797c4c4-2976-4248-8938-a14a656c6e70", "spanish", "known_card", data)
 	if err != nil {
 		log.Fatalf("Error adding to sub-collection: %v", err)
 	}
@@ -44,7 +44,9 @@ func main() {
 		"int":  120,
 	}
 
-	err = firebase.AddSubCollection(firebaseApp, "e797c4c4-2976-4248-8938-a14a656c6e70", "known_card", data)
+	err = firebase.AddSubCollectionToLanguage(firebaseApp, "e797c4c4-2976-4248-8938-a14a656c6e70", "spanish", "known_card", data)
+
+	err = firebase.AddLanguage(firebaseApp, "e797c4c4-2976-4248-8938-a14a656c6e70", "spanish")
 
 	// Initialize the router from routes.go (as before)
 	router := http.NewServeMux()
